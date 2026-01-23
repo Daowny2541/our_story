@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../data/love_questions.dart';
+import '../utils/question_manager.dart';
+import '../utils/time_message.dart';
+
 class SurprisePage extends StatefulWidget {
   const SurprisePage({super.key});
 
@@ -9,6 +13,23 @@ class SurprisePage extends StatefulWidget {
 
 class _SurprisePageState extends State<SurprisePage> {
   bool unlocked = false;
+
+  LoveQuestion? currentQuestion;
+  bool answered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadQuestion();
+  }
+
+  Future<void> _loadQuestion() async {
+    final q = await QuestionManager.getRandomQuestion();
+    setState(() {
+      currentQuestion = q;
+      answered = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +57,7 @@ class _SurprisePageState extends State<SurprisePage> {
         const Icon(Icons.lock, size: 80, color: Colors.pink),
         const SizedBox(height: 16),
         const Text(
-          'ยังไม่เปิดนะ 😊',
+          'ยังไม่เปิดนะ 😊 ลองอีกครั้ง',
           style: TextStyle(fontSize: 18),
         ),
         const SizedBox(height: 20),
@@ -67,11 +88,75 @@ class _SurprisePageState extends State<SurprisePage> {
           ),
         ],
       ),
-      child: const Text(
-        'รักเธอมากกว่าที่คำพูดจะอธิบายได้\nอยู่ด้วยกันไปนาน ๆ นะ 💖',
-        textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 18),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            getTimeMessage(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 18),
+          ),
+          _questionCard(),
+        ],
       ),
     );
   }
+
+  Widget _questionCard() {
+    if (currentQuestion == null) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 16),
+        child: Text(
+          'เราตอบคำถามของเราครบแล้วนะ 💖',
+          style: TextStyle(fontSize: 16),
+        ),
+      );
+    }
+
+    final q = currentQuestion!;
+
+    return Container(
+      margin: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.pink.shade50,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          Text(
+            q.question,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...q.answers.map(
+                (a) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: ElevatedButton(
+                onPressed: answered
+                    ? null
+                    : () async {
+                  setState(() => answered = true);
+                  await QuestionManager.saveAnswer(q.id);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(q.reply)),
+                  );
+
+                  // โหลดคำถามใหม่
+                  Future.delayed(const Duration(seconds: 1), _loadQuestion);
+                },
+                child: Text(a),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 }

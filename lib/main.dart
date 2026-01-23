@@ -12,7 +12,7 @@ class LoveApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'For My Love 💖',
+      title: 'Our Story 💖',
       theme: ThemeData(
         useMaterial3: true,
         fontFamily: 'Roboto',
