@@ -35,4 +35,9 @@ class QuestionManager {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_answeredKey);
   }
+
+  static bool isAllAnswered(List<String> answeredIds) {
+    return answeredIds.length >= loveQuestions.length;
+  }
+
 }
